@@ -1,553 +1,1694 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plaito - Grade Prediction Demo</title>
-<style>
-  :root {
-    --bg: #0f0f13;
-    --surface: #1a1a24;
-    --surface2: #23233a;
-    --accent: #6c5ce7;
-    --accent2: #a29bfe;
-    --green: #00b894;
-    --yellow: #fdcb6e;
-    --red: #e17055;
-    --orange: #f39c12;
-    --text: #f0f0f5;
-    --text2: #9a9ab0;
-    --border: #2d2d44;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Plaito — AI-powered grade prediction and study coach for high school students." />
+  <title>Plaito</title>
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #14141f;
+      --surface2: #1e1e2e;
+      --accent:   #6c5ce7;
+      --accent2:  #a29bfe;
+      --green:    #00b894;
+      --yellow:   #fdcb6e;
+      --red:      #e17055;
+      --text:     #f0f0f5;
+      --text2:    #8888a0;
+      --border:   #2a2a3d;
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+      /* Derived / alias */
+      --accent-rgb:  108, 92, 231;
+      --green-rgb:   0, 184, 148;
+      --yellow-rgb:  253, 203, 110;
+      --red-rgb:     225, 112, 85;
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-xl:   20px;
+      --radius-pill: 999px;
 
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --shadow-nav:  0 -1px 0 var(--border);
+      --transition:  0.18s ease;
 
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 32px;
-  }
-  .header h1 {
-    font-size: 28px;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 4px;
-  }
-  .header p { color: var(--text2); font-size: 14px; }
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Helvetica, Arial, sans-serif;
+    }
 
-  /* Grade Card */
-  .grade-card {
-    background: linear-gradient(135deg, var(--accent), #4834d4);
-    border-radius: 20px;
-    padding: 32px;
-    text-align: center;
-    margin-bottom: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-  .grade-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  }
-  .grade-card .course-name {
-    font-size: 14px;
-    opacity: 0.8;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-  }
-  .grade-card .grade-number {
-    font-size: 72px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
-    transition: all 0.5s ease;
-  }
-  .grade-card .grade-letter {
-    font-size: 24px;
-    font-weight: 600;
-    opacity: 0.9;
-    margin-bottom: 16px;
-  }
-  .grade-card .grade-meta {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    font-size: 13px;
-    opacity: 0.85;
-  }
-  .grade-card .grade-meta span { display: flex; align-items: center; gap: 4px; }
-  .grade-delta {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-  }
-  .grade-delta.positive { background: rgba(0, 184, 148, 0.25); color: var(--green); }
-  .grade-delta.negative { background: rgba(225, 112, 85, 0.25); color: var(--red); }
-  .grade-delta.neutral { background: rgba(255,255,255,0.15); color: var(--text); }
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  /* Trend badge */
-  .trend-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .trend-badge.improving { background: rgba(0,184,148,0.2); color: var(--green); }
-  .trend-badge.declining { background: rgba(225,112,85,0.2); color: var(--red); }
-  .trend-badge.stable { background: rgba(253,203,110,0.2); color: var(--yellow); }
-  .trend-badge.new { background: rgba(162,155,254,0.2); color: var(--accent2); }
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overscroll-behavior: none;
+    }
 
-  /* Section */
-  .section {
-    background: var(--surface);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    border: 1px solid var(--border);
-  }
-  .section-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+    body {
+      background: var(--bg);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
 
-  /* Mastery bars */
-  .concept-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border-radius: 12px;
-    transition: all 0.2s ease;
-  }
-  .concept-row:hover { transform: translateX(2px); }
-  .concept-row:last-child { margin-bottom: 0; }
-  .concept-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .concept-name {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .concept-pct {
-    font-size: 13px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .bar-track {
-    height: 8px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 0.6s ease, background 0.4s ease;
-  }
-  .concept-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .btn-signal {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-  }
-  .btn-signal:active { transform: scale(0.9); }
-  .btn-correct {
-    background: rgba(0, 184, 148, 0.15);
-    color: var(--green);
-  }
-  .btn-correct:hover { background: rgba(0, 184, 148, 0.3); }
-  .btn-wrong {
-    background: rgba(225, 112, 85, 0.15);
-    color: var(--red);
-  }
-  .btn-wrong:hover { background: rgba(225, 112, 85, 0.3); }
-  .btn-hint {
-    background: rgba(253, 203, 110, 0.15);
-    color: var(--yellow);
-  }
-  .btn-hint:hover { background: rgba(253, 203, 110, 0.3); }
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      outline: none;
+    }
 
-  /* Recommendations */
-  .rec-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    color: var(--text2);
-  }
-  .rec-item:last-child { border-bottom: none; }
-  .rec-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: rgba(108, 92, 231, 0.2);
-    color: var(--accent2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 12px;
-    margin-top: 1px;
-  }
+    button {
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
 
-  /* Sessions counter */
-  .sessions-target {
-    text-align: center;
-    padding: 16px;
-    background: var(--surface2);
-    border-radius: 12px;
-    margin-top: 12px;
-  }
-  .sessions-number {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--accent2);
-  }
-  .sessions-label {
-    font-size: 13px;
-    color: var(--text2);
-    margin-top: 2px;
-  }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-  /* Toast notification */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 20px;
-    font-size: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    transition: transform 0.3s ease;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+    img, svg {
+      display: block;
+    }
 
-  /* Loading */
-  .loading {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text2);
-  }
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 12px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 80px; /* clearance for bottom nav */
+      min-height: 100dvh;
+    }
 
-  /* Confidence meter */
-  .confidence-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 4px;
-  }
-  .confidence-dots {
-    display: flex;
-    gap: 3px;
-  }
-  .confidence-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--border);
-  }
-  .confidence-dot.filled { background: var(--accent2); }
+    /* ============================================================
+       PAGE TRANSITIONS
+    ============================================================ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-  /* Overall mastery */
-  .overall-bar {
-    margin-top: 12px;
-  }
-  .overall-track {
-    height: 12px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .overall-fill {
-    height: 100%;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    transition: width 0.6s ease;
-  }
-  .overall-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-top: 6px;
-    color: var(--text2);
-  }
+    .page {
+      display: none;
+      opacity: 0;
+      transform: translateY(20px);
+    }
 
-  @media (max-width: 480px) {
-    .grade-card .grade-number { font-size: 56px; }
-    .concept-actions { gap: 4px; }
-    .btn-signal { width: 32px; height: 32px; font-size: 14px; }
-  }
-</style>
+    .page.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+      animation: fadeInUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ============================================================
+       BOTTOM NAVIGATION
+    ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 44px;
+      color: var(--text2);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: color var(--transition), transform var(--transition);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item:active {
+      transform: scale(0.92);
+    }
+
+    /* ============================================================
+       WELCOME / ONBOARDING
+    ============================================================ */
+    .welcome-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 24px;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108, 92, 231, 0.28) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(162, 155, 254, 0.12) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .welcome-logo {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent2) 0%, #c8b8ff 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-tagline {
+      font-size: 15px;
+      color: var(--text2);
+      text-align: center;
+      max-width: 260px;
+      line-height: 1.6;
+    }
+
+    .welcome-tagline strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Primary CTA button */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 52px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      border: none;
+      cursor: pointer;
+      transition:
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+      box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.4);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .btn-primary:hover {
+      background: #7c6cf0;
+      box-shadow: 0 6px 28px rgba(var(--accent-rgb), 0.55);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* Career selection grid */
+    .career-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .career-card {
+      background: var(--surface2);
+      border-radius: var(--radius-lg);
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition:
+        border-color var(--transition),
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+      user-select: none;
+    }
+
+    .career-card .career-emoji {
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .career-card .career-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .career-card:hover {
+      border-color: rgba(var(--accent-rgb), 0.45);
+      background: rgba(var(--accent-rgb), 0.06);
+    }
+
+    .career-card:active {
+      transform: scale(0.96);
+    }
+
+    .career-card.selected {
+      border-color: var(--accent);
+      background: rgba(var(--accent-rgb), 0.12);
+      box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+    }
+
+    /* ============================================================
+       DASHBOARD
+    ============================================================ */
+    .greeting {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .greeting span {
+      display: block;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--yellow);
+    }
+
+    /* GPA summary card */
+    .gpa-card {
+      background: linear-gradient(135deg, var(--accent) 0%, #8b78ff 60%, #b8adff 100%);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(var(--accent-rgb), 0.35);
+    }
+
+    .gpa-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(0,0,0,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .gpa-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.75;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .gpa-ring-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 12px;
+    }
+
+    .gpa-ring {
+      width: 120px;
+      height: 120px;
+      transform: rotate(-90deg);
+    }
+
+    .gpa-ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.2);
+      stroke-width: 8;
+    }
+
+    .gpa-ring-fill {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gpa-number-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gpa-number {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #fff;
+    }
+
+    .gpa-subtext {
+      font-size: 13px;
+      opacity: 0.8;
+      position: relative;
+    }
+
+    /* Course list */
+    .course-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .course-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition:
+        border-color var(--transition),
+        background var(--transition),
+        transform var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-card:hover {
+      border-color: rgba(var(--accent-rgb), 0.4);
+      background: rgba(var(--accent-rgb), 0.04);
+    }
+
+    .course-card:active {
+      transform: scale(0.98);
+    }
+
+    .course-emoji {
+      font-size: 32px;
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+    }
+
+    .course-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .course-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+
+    .mini-bar {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .course-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .course-grade {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .trend-up     { color: var(--green); }
+    .trend-down   { color: var(--red); }
+    .trend-stable { color: var(--yellow); }
+
+    .trend-label {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       COURSE DETAIL
+    ============================================================ */
+    .back-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: background var(--transition), transform var(--transition);
+      margin-left: -8px;
+    }
+
+    .back-btn:hover  { background: var(--surface2); }
+    .back-btn:active { transform: scale(0.92); }
+
+    .hero-card {
+      border-radius: var(--radius-xl);
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 70% 15%, rgba(255,255,255,0.14) 0%, transparent 45%);
+      pointer-events: none;
+    }
+
+    .hero-grade {
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #fff;
+    }
+
+    .hero-letter {
+      font-size: 24px;
+      font-weight: 600;
+      opacity: 0.9;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    .hero-course-name {
+      font-size: 15px;
+      opacity: 0.75;
+      color: #fff;
+      margin-top: 8px;
+    }
+
+    /* Section cards (detail sections) */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    /* Concept rows */
+    .concept-row {
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .concept-row:last-child { margin-bottom: 0; }
+
+    .concept-emoji {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .concept-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .concept-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .concept-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .confidence-dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .confidence-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background var(--transition);
+    }
+
+    .confidence-dot.filled {
+      background: var(--accent2);
+    }
+
+    .concept-pct {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text2);
+    }
+
+    /* Sparkline chart */
+    .sparkline {
+      width: 100%;
+      height: 60px;
+      overflow: visible;
+    }
+
+    /* Recommendation items */
+    .rec-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .rec-item:last-child { border-bottom: none; }
+
+    .rec-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(var(--accent-rgb), 0.15);
+      color: var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .rec-text {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .rec-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Study CTA */
+    .btn-study {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 52px;
+      background: var(--green);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      margin-top: 16px;
+      box-shadow: 0 4px 20px rgba(var(--green-rgb), 0.35);
+      transition:
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+    }
+
+    .btn-study:hover {
+      background: #00cc9e;
+      box-shadow: 0 6px 28px rgba(var(--green-rgb), 0.5);
+    }
+
+    .btn-study:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 10px rgba(var(--green-rgb), 0.25);
+    }
+
+    /* ============================================================
+       STUDY MODE
+    ============================================================ */
+    .study-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+    }
+
+    .study-progress {
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .study-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .study-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+
+    .study-concept {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .study-mastery {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+
+    .study-prompt {
+      color: var(--text2);
+      font-size: 14px;
+      margin: 24px 0;
+      font-style: italic;
+      line-height: 1.7;
+    }
+
+    .study-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* Feedback buttons */
+    .btn-correct,
+    .btn-hint,
+    .btn-wrong {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 52px;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition:
+        background var(--transition),
+        transform var(--transition);
+    }
+
+    .btn-correct {
+      background: rgba(var(--green-rgb), 0.15);
+      color: var(--green);
+    }
+    .btn-correct:hover  { background: rgba(var(--green-rgb), 0.25); }
+    .btn-correct:active { transform: scale(0.97); }
+
+    .btn-hint {
+      background: rgba(var(--yellow-rgb), 0.15);
+      color: var(--yellow);
+    }
+    .btn-hint:hover  { background: rgba(var(--yellow-rgb), 0.25); }
+    .btn-hint:active { transform: scale(0.97); }
+
+    .btn-wrong {
+      background: rgba(var(--red-rgb), 0.15);
+      color: var(--red);
+    }
+    .btn-wrong:hover  { background: rgba(var(--red-rgb), 0.25); }
+    .btn-wrong:active { transform: scale(0.97); }
+
+    /* Delta badge (grade change indicator) */
+    .delta-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .delta-positive {
+      background: rgba(var(--green-rgb), 0.15);
+      color: var(--green);
+    }
+
+    .delta-negative {
+      background: rgba(var(--red-rgb), 0.15);
+      color: var(--red);
+    }
+
+    /* Session complete */
+    .session-complete {
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .session-complete .complete-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .xp-earned {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent2);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .xp-label {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    /* ============================================================
+       PROFILE
+    ============================================================ */
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.4);
+    }
+
+    .goal-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      border-left: 4px solid var(--accent);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .goal-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent2);
+      margin-bottom: 6px;
+    }
+
+    .goal-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent2);
+      letter-spacing: -0.02em;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .grade-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .grade-list-item:last-child { border-bottom: none; }
+
+    .grade-list-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .grade-list-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATIONS
+    ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+      z-index: 200;
+      max-width: calc(100vw - 48px);
+      white-space: normal;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast.toast-success { border-color: rgba(var(--green-rgb), 0.5);  color: var(--green); }
+    .toast.toast-error   { border-color: rgba(var(--red-rgb), 0.5);    color: var(--red); }
+    .toast.toast-info    { border-color: rgba(var(--accent-rgb), 0.5); color: var(--accent2); }
+
+    /* ============================================================
+       LOADING STATES
+    ============================================================ */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    .spinner-sm {
+      width: 18px;
+      height: 18px;
+      border-width: 2px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    .skeleton {
+      background: var(--surface2);
+      background-image: linear-gradient(
+        90deg,
+        var(--surface2)            0%,
+        rgba(255,255,255,0.06)    50%,
+        var(--surface2)           100%
+      );
+      background-size: 400px 100%;
+      background-repeat: no-repeat;
+      border-radius: var(--radius-sm);
+      animation: shimmer 1.4s ease-in-out infinite;
+    }
+
+    .skeleton-text  { height: 16px; margin-bottom: 8px; }
+    .skeleton-title { height: 24px; width: 60%; margin-bottom: 12px; }
+    .skeleton-card  { height: 80px; border-radius: var(--radius-lg); }
+
+    /* ============================================================
+       UTILITY CLASSES
+    ============================================================ */
+    .text-center  { text-align: center; }
+    .text-muted   { color: var(--text2); }
+
+    .mt-4  { margin-top:  4px; }
+    .mt-8  { margin-top:  8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+
+    .mb-4  { margin-bottom:  4px; }
+    .mb-8  { margin-bottom:  8px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .mb-32 { margin-bottom: 32px; }
+
+    .gap-8  { gap:  8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+
+    .flex            { display: flex; }
+    .flex-col        { flex-direction: column; }
+    .items-center    { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .flex-1          { flex: 1; }
+
+    .w-full { width: 100%; }
+    .h-full { height: 100%; }
+
+    .font-bold    { font-weight: 700; }
+    .font-semibold{ font-weight: 600; }
+    .text-sm      { font-size: 13px; }
+    .text-xs      { font-size: 11px; }
+    .text-lg      { font-size: 18px; }
+
+    .rounded      { border-radius: var(--radius-md); }
+    .rounded-lg   { border-radius: var(--radius-lg); }
+    .rounded-full { border-radius: var(--radius-pill); }
+
+    .opacity-0  { opacity: 0; }
+    .opacity-50 { opacity: 0.5; }
+    .hidden     { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ============================================================
+       SCROLLBAR (webkit)
+    ============================================================ */
+    ::-webkit-scrollbar       { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* ============================================================
+       FOCUS / ACCESSIBILITY
+    ============================================================ */
+    :focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>Plaito</h1>
-    <p>AI Grade Prediction Engine</p>
-  </div>
-
+  <!-- ============================================================
+       ROOT APPLICATION SHELL
+  ============================================================ -->
   <div id="app">
-    <div class="loading">
-      <div class="spinner"></div>
-      Loading prediction...
-    </div>
-  </div>
-</div>
+    <div id="page-content" class="app-container"></div>
 
-<div class="toast" id="toast"></div>
+    <!-- ============================================================
+         BOTTOM NAVIGATION
+    ============================================================ -->
+    <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Main navigation">
+
+      <button class="nav-item active" data-page="dashboard" aria-label="Dashboard" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </button>
+
+      <button class="nav-item" data-page="study" aria-label="Study">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        Study
+      </button>
+
+      <button class="nav-item" data-page="predict" aria-label="Predict">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Predict
+      </button>
+
+      <button class="nav-item" data-page="profile" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Profile
+      </button>
+
+    </nav>
+
+  </div><!-- /#app -->
+
+  <!-- ============================================================
+       TOAST NOTIFICATION
+  ============================================================ -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+// ============================================================
+//  PLAITO — Application JavaScript
+// ============================================================
 const API = window.location.origin;
 const USER_ID = '11111111-1111-1111-1111-111111111111';
-const COURSE_ID = '22222222-2222-2222-2222-222222222222';
-const HEADERS = { 'x-user-id': USER_ID, 'Content-Type': 'application/json' };
+const HEADERS = {'x-user-id': USER_ID, 'Content-Type': 'application/json'};
+const $ = s => document.querySelector(s);
+const page = () => $('#page-content');
+const nav = () => $('#bottom-nav');
+const CAREERS = [
+  {id:'doctor',emoji:'🩺',label:'Doctor',msg:'Your science courses are building the foundation for saving lives.'},
+  {id:'engineer',emoji:'⚙️',label:'Engineer',msg:'Math and physics will power the innovations you build.'},
+  {id:'lawyer',emoji:'⚖️',label:'Lawyer',msg:'Strong writing and history skills are your path to the courtroom.'},
+  {id:'designer',emoji:'🎨',label:'Designer',msg:'Creativity meets technical skill — your unique edge.'},
+  {id:'scientist',emoji:'🔬',label:'Scientist',msg:'Every concept you master brings you closer to discovery.'},
+  {id:'entrepreneur',emoji:'🚀',label:'Entrepreneur',msg:'Business sense + technical skills = unstoppable.'},
+  {id:'artist',emoji:'🎭',label:'Artist',msg:'Your perspective matters — keep feeding your curiosity.'},
+  {id:'teacher',emoji:'📚',label:'Teacher',msg:'Mastering subjects deeply now prepares you to inspire others.'},
+  {id:'writer',emoji:'✍️',label:'Writer',msg:'History and language are the tools of powerful storytelling.'},
+  {id:'other',emoji:'✨',label:'Something Big',msg:'Whatever path you choose, strong grades open every door.'},
+];
 
-let previousGrade = null;
-
-function barColor(score) {
-  if (score >= 80) return 'var(--green)';
-  if (score >= 60) return 'var(--accent2)';
-  if (score >= 40) return 'var(--yellow)';
+// ============================================================
+//  Helpers
+// ============================================================
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, {headers: HEADERS, ...opts});
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+function barColor(pct) {
+  if (pct >= 80) return 'var(--green)';
+  if (pct >= 60) return 'var(--accent2)';
+  if (pct >= 40) return 'var(--yellow)';
   return 'var(--red)';
 }
-
-function confidenceDots(confidence) {
-  const filled = Math.round(confidence * 5);
-  return Array.from({length: 5}, (_, i) =>
-    `<div class="confidence-dot ${i < filled ? 'filled' : ''}"></div>`
-  ).join('');
+function trendIcon(t) {
+  if (t === 'improving') return '<span class="trend-up">↑</span>';
+  if (t === 'declining') return '<span class="trend-down">↓</span>';
+  return '<span class="trend-stable">→</span>';
 }
-
-function showToast(msg, duration = 2500) {
-  const t = document.getElementById('toast');
+function confDots(c) {
+  const f = Math.round(c * 5);
+  return Array.from({length:5},(_,i)=>`<div class="confidence-dot${i<f?' filled':''}"></div>`).join('');
+}
+function toast(msg, type='') {
+  const t = $('#toast');
+  t.className = 'toast show' + (type ? ' toast-'+type : '');
   t.innerHTML = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+  setTimeout(()=> t.className = 'toast', 2500);
+}
+function gradeToGPA(g) { return Math.min(4.0, Math.max(0, (g - 50) / 12.5)).toFixed(2); }
+function getStreak() {
+  const d = JSON.parse(localStorage.getItem('plaito_streak') || '{}');
+  const today = new Date().toDateString();
+  if (d.last === today) return d;
+  const yesterday = new Date(Date.now()-86400000).toDateString();
+  const count = d.last === yesterday ? (d.count||0)+1 : 1;
+  const days = [...(d.days||[]), today].slice(-7);
+  const s = {count, last: today, days};
+  localStorage.setItem('plaito_streak', JSON.stringify(s));
+  return s;
 }
 
-async function fetchPrediction() {
-  const res = await fetch(`${API}/api/v1/grades/${COURSE_ID}/predict`, { headers: HEADERS });
-  return res.json();
+// ============================================================
+//  Router
+// ============================================================
+function router() {
+  const hash = location.hash || '#/';
+  const done = localStorage.getItem('plaito_onboarded');
+  if (!done && !hash.startsWith('#/welcome') && !hash.startsWith('#/goals')) {
+    location.hash = '#/welcome';
+    return;
+  }
+  if (hash === '#/' || hash === '#/dashboard') showDashboard();
+  else if (hash === '#/welcome') showWelcome();
+  else if (hash === '#/goals') showGoals();
+  else if (hash.startsWith('#/course/')) showCourse(hash.split('/')[2]);
+  else if (hash.startsWith('#/study/')) showStudy(hash.split('/')[2]);
+  else if (hash === '#/profile') showProfile();
+  else showDashboard();
 }
+window.addEventListener('hashchange', router);
 
-async function fetchMastery() {
-  const res = await fetch(`${API}/api/v1/courses/${COURSE_ID}/mastery`, { headers: HEADERS });
-  return res.json();
-}
-
-async function sendSignal(conceptId, signalType, signalValue) {
-  const res = await fetch(`${API}/api/v1/mastery/update`, {
-    method: 'POST',
-    headers: HEADERS,
-    body: JSON.stringify({
-      user_id: USER_ID,
-      concept_id: conceptId,
-      signal_type: signalType,
-      signal_value: signalValue
-    })
+// Nav highlighting
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = btn.dataset.page;
+    if (p === 'dashboard') location.hash = '#/';
+    else if (p === 'profile') location.hash = '#/profile';
+    else if (p === 'study' || p === 'predict') location.hash = '#/';
   });
-  return res.json();
-}
-
-async function render() {
-  const [predData, masteryData] = await Promise.all([fetchPrediction(), fetchMastery()]);
-  const pred = predData.prediction;
-  const concepts = masteryData.concepts;
-
-  // Grade delta
-  let deltaHtml = '';
-  if (previousGrade !== null) {
-    const diff = pred.predicted_grade - previousGrade;
-    if (Math.abs(diff) >= 0.1) {
-      const cls = diff > 0 ? 'positive' : 'negative';
-      const sign = diff > 0 ? '+' : '';
-      deltaHtml = `<div class="grade-delta ${cls}">${sign}${diff.toFixed(1)} pts</div>`;
-    } else {
-      deltaHtml = `<div class="grade-delta neutral">No change</div>`;
-    }
-  }
-  previousGrade = pred.predicted_grade;
-
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <!-- Grade Card -->
-    <div class="grade-card">
-      <div class="course-name">Calculus II - MATH 201</div>
-      ${deltaHtml}
-      <div class="grade-number">${pred.predicted_grade}</div>
-      <div class="grade-letter">${pred.predicted_letter}</div>
-      <div class="grade-meta">
-        <span class="trend-badge ${pred.trend}">${pred.trend}</span>
-        <span>Confidence: ${(pred.confidence * 100).toFixed(0)}%</span>
-        ${pred.sessions_to_target !== null ? `<span>${pred.sessions_to_target} sessions to A</span>` : ''}
-      </div>
-    </div>
-
-    <!-- Mastery Map -->
-    <div class="section">
-      <div class="section-title">
-        <span>Concept Mastery</span>
-      </div>
-      ${concepts.map(c => `
-        <div class="concept-row">
-          <div class="concept-info">
-            <div class="concept-name">
-              <span>${c.concept_name}</span>
-              <span class="concept-pct" style="color: ${barColor(c.effective_score * 100)}">${(c.effective_score * 100).toFixed(0)}%</span>
-            </div>
-            <div class="bar-track">
-              <div class="bar-fill" style="width: ${c.effective_score * 100}%; background: ${barColor(c.effective_score * 100)}"></div>
-            </div>
-            <div class="confidence-row">
-              <div class="confidence-dots">${confidenceDots(c.confidence)}</div>
-              <span>${c.attempt_count} attempts${c.days_since_practice !== null ? ` · ${c.days_since_practice}d ago` : ' · new'}</span>
-            </div>
-          </div>
-          <div class="concept-actions">
-            <button class="btn-signal btn-correct" onclick="handleSignal('${c.concept_id}', 'correct_answer', 1.0, '${c.concept_name}')" title="Correct answer">&#10003;</button>
-            <button class="btn-signal btn-hint" onclick="handleSignal('${c.concept_id}', 'needed_hint', 0.5, '${c.concept_name}')" title="Needed hint">?</button>
-            <button class="btn-signal btn-wrong" onclick="handleSignal('${c.concept_id}', 'incorrect_answer', 0.1, '${c.concept_name}')" title="Wrong answer">&#10007;</button>
-          </div>
-        </div>
-      `).join('')}
-
-      <div class="overall-bar">
-        <div class="overall-track">
-          <div class="overall-fill" style="width: ${masteryData.overall_mastery}%"></div>
-        </div>
-        <div class="overall-label">
-          <span>Overall Mastery</span>
-          <span>${masteryData.overall_mastery.toFixed(1)}%</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recommendations -->
-    <div class="section">
-      <div class="section-title">
-        <span>Recommended Actions</span>
-      </div>
-      ${pred.recommended_actions.map(a => `
-        <div class="rec-item">
-          <div class="rec-icon">&#9889;</div>
-          <span>${a}</span>
-        </div>
-      `).join('')}
-
-      ${pred.sessions_to_target !== null && pred.sessions_to_target > 0 ? `
-        <div class="sessions-target">
-          <div class="sessions-number">${pred.sessions_to_target}</div>
-          <div class="sessions-label">study sessions to reach your A target</div>
-        </div>
-      ` : `
-        <div class="sessions-target">
-          <div class="sessions-number" style="color: var(--green)">&#10003;</div>
-          <div class="sessions-label">You've reached your target!</div>
-        </div>
-      `}
-    </div>
-  `;
-}
-
-async function handleSignal(conceptId, signalType, signalValue, conceptName) {
-  // Disable all buttons during update
-  document.querySelectorAll('.btn-signal').forEach(b => b.disabled = true);
-
-  const labels = {
-    'correct_answer': ['&#10003; Correct!', 'var(--green)'],
-    'needed_hint': ['? Hint used', 'var(--yellow)'],
-    'incorrect_answer': ['&#10007; Incorrect', 'var(--red)'],
-  };
-  const [label, color] = labels[signalType];
-
-  try {
-    const result = await sendSignal(conceptId, signalType, signalValue);
-    const scoreDiff = result.new_score - result.old_score;
-    const sign = scoreDiff >= 0 ? '+' : '';
-    showToast(`<span style="color:${color}">${label}</span> &nbsp;${conceptName}: ${sign}${(scoreDiff * 100).toFixed(1)}%`);
-
-    await render();
-  } catch (e) {
-    showToast('Error updating mastery');
-  }
-}
-
-// Initial load
-render().catch(() => {
-  document.getElementById('app').innerHTML = '<div class="loading">Failed to load. Make sure the API is running.</div>';
 });
+function setNav(active) {
+  document.querySelectorAll('.nav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === active);
+  });
+}
+
+// ============================================================
+//  WELCOME
+// ============================================================
+function showWelcome() {
+  nav().style.display = 'none';
+  page().innerHTML = `
+    <div class="welcome-page page active">
+      <div style="text-align:center">
+        <div class="welcome-logo">Plaito</div>
+        <p class="welcome-tagline">Know your grade before the test</p>
+        <p style="color:var(--text2);font-size:14px;margin-top:8px">AI-powered grade predictions that help you study smarter</p>
+      </div>
+      <button class="btn-primary" onclick="location.hash='#/goals'" style="margin-top:40px">Get Started</button>
+    </div>`;
+}
+
+// ============================================================
+//  GOALS
+// ============================================================
+function showGoals() {
+  nav().style.display = 'none';
+  const sel = localStorage.getItem('plaito_career') || '';
+  page().innerHTML = `
+    <div class="page active" style="padding:24px 0">
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:4px">What do you want to be?</h2>
+      <p class="text-muted" style="margin-bottom:24px">Pick your dream — we'll connect it to your courses</p>
+      <div class="career-grid">${CAREERS.map(c=>`
+        <div class="career-card${sel===c.id?' selected':''}" data-id="${c.id}" onclick="selectCareer('${c.id}')">
+          <div style="font-size:32px;margin-bottom:8px">${c.emoji}</div>
+          <div style="font-size:14px;font-weight:600">${c.label}</div>
+        </div>`).join('')}
+      </div>
+      <div id="career-msg" style="text-align:center;margin-top:20px;min-height:60px;color:var(--text2);font-size:14px"></div>
+      <button class="btn-primary" id="goals-go" style="margin-top:8px" disabled onclick="finishOnboarding()">Let's go</button>
+    </div>`;
+}
+window.selectCareer = function(id) {
+  localStorage.setItem('plaito_career', id);
+  document.querySelectorAll('.career-card').forEach(c=>c.classList.toggle('selected',c.dataset.id===id));
+  const career = CAREERS.find(c=>c.id===id);
+  $('#career-msg').textContent = career ? career.msg : '';
+  $('#goals-go').disabled = false;
+};
+window.finishOnboarding = function() {
+  localStorage.setItem('plaito_onboarded', '1');
+  location.hash = '#/';
+};
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+async function showDashboard() {
+  nav().style.display = 'flex';
+  setNav('dashboard');
+  page().innerHTML = '<div class="page active" style="padding:24px 0"><div class="spinner" style="margin:80px auto"></div></div>';
+  try {
+    const [profileRes, coursesRes] = await Promise.all([api('/api/v1/user/profile'), api('/api/v1/courses')]);
+    const user = profileRes.user;
+    const courses = coursesRes.courses;
+    const streak = getStreak();
+
+    // Fetch predictions for all courses
+    const preds = await Promise.all(courses.map(c => api(`/api/v1/grades/${c.id}/predict?save=false`)));
+
+    const grades = preds.map(p=>p.prediction.predicted_grade);
+    const avgGrade = grades.length ? grades.reduce((a,b)=>a+b,0)/grades.length : 0;
+    const gpa = gradeToGPA(avgGrade);
+    const pct = Math.min(100, avgGrade);
+    const circumference = 2 * Math.PI * 52;
+    const offset = circumference - (pct / 100) * circumference;
+
+    const last7 = [];
+    for (let i=6;i>=0;i--) last7.push(new Date(Date.now()-i*86400000).toDateString());
+
+    page().innerHTML = `
+      <div class="page active" style="padding:24px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <div>
+            <div class="greeting">Hey, ${user.display_name || 'there'} 👋</div>
+            <div class="text-muted" style="font-size:13px">${user.school_name || ''} · ${user.grade_level || ''}</div>
+          </div>
+          <div class="streak-badge">🔥 ${streak.count}</div>
+        </div>
+
+        <div class="gpa-card" style="margin-bottom:24px">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:2px;opacity:0.8;margin-bottom:12px">Predicted GPA</div>
+          <div style="position:relative;width:120px;height:120px;margin:0 auto 12px">
+            <svg class="gpa-ring" viewBox="0 0 120 120" style="width:120px;height:120px;transform:rotate(-90deg)">
+              <circle cx="60" cy="60" r="52" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
+              <circle cx="60" cy="60" r="52" stroke="var(--accent2)" stroke-width="8" fill="none"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"
+                style="transition:stroke-dashoffset 1s ease"/>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+              <div class="gpa-number">${gpa}</div>
+            </div>
+          </div>
+          <div style="font-size:13px;opacity:0.8">${courses.length} courses · ${avgGrade.toFixed(0)}% avg</div>
+        </div>
+
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px">Your Courses</div>
+        <div class="course-grid">
+          ${courses.map((c,i)=>{
+            const p = preds[i].prediction;
+            const masteryPct = p.factors.length ? (p.factors.reduce((a,f)=>a+f.effective_mastery,0)/p.factors.length) : 0;
+            return `
+            <div class="course-card" onclick="location.hash='#/course/${c.id}'">
+              <div class="course-emoji">${c.emoji || '📚'}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;font-weight:600;margin-bottom:2px">${c.name}</div>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${c.course_code || ''}</div>
+                <div class="mini-bar"><div class="mini-bar-fill" style="width:${masteryPct}%;background:${barColor(masteryPct)}"></div></div>
+              </div>
+              <div style="text-align:right">
+                <div class="course-grade" style="color:${barColor(p.predicted_grade)}">${p.predicted_grade}</div>
+                <div style="font-size:13px;color:var(--text2)">${p.predicted_letter} ${trendIcon(p.trend)}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div class="section-card" style="margin-top:24px">
+          <div class="section-title">🔥 Study Streak</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+            ${last7.map(d=>`<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;${(streak.days||[]).includes(d)?'background:var(--accent);color:white':'background:var(--surface2);color:var(--text2)'}">${new Date(d).getDate()}</div>`).join('')}
+          </div>
+          <div style="text-align:center;font-size:14px;color:var(--text2)">${streak.count} day streak — keep it going!</div>
+        </div>
+      </div>`;
+  } catch(e) {
+    page().innerHTML = `<div class="page active" style="padding:80px 24px;text-align:center"><p>Failed to load dashboard</p><p class="text-muted">${e.message}</p></div>`;
+  }
+}
+
+// ============================================================
+//  COURSE DETAIL
+// ============================================================
+async function showCourse(courseId) {
+  nav().style.display = 'flex';
+  setNav('predict');
+  page().innerHTML = '<div class="page active" style="padding:24px 0"><div class="spinner" style="margin:80px auto"></div></div>';
+  try {
+    const [predRes, masteryRes, histRes, coursesRes] = await Promise.all([
+      api(`/api/v1/grades/${courseId}/predict?save=false`),
+      api(`/api/v1/courses/${courseId}/mastery`),
+      api(`/api/v1/grades/${courseId}/history?limit=10`),
+      api('/api/v1/courses'),
+    ]);
+    const pred = predRes.prediction;
+    const concepts = masteryRes.concepts;
+    const course = coursesRes.courses.find(c=>c.id===courseId) || {};
+    const snapshots = (histRes.snapshots||[]).reverse();
+
+    // Sparkline SVG
+    let sparkSvg = '';
+    if (snapshots.length > 1) {
+      const vals = snapshots.map(s=>s.predicted_grade);
+      const min = Math.min(...vals)-5, max = Math.max(...vals)+5, range = max-min||1;
+      const w = 300, h = 60;
+      const pts = vals.map((v,i)=>`${(i/(vals.length-1))*w},${h-((v-min)/range)*h}`).join(' ');
+      sparkSvg = `<svg viewBox="0 0 ${w} ${h}" class="sparkline" preserveAspectRatio="none">
+        <polyline points="${pts}" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${(vals.length-1)/(vals.length-1)*w}" cy="${h-((vals[vals.length-1]-min)/range)*h}" r="4" fill="var(--accent2)"/>
+      </svg>`;
+    }
+
+    page().innerHTML = `
+      <div class="page active" style="padding:16px 0">
+        <button class="back-btn" onclick="location.hash='#/'" aria-label="Back">← Back</button>
+
+        <div class="hero-card" style="margin:12px 0 20px">
+          <div style="font-size:13px;text-transform:uppercase;letter-spacing:1.5px;opacity:0.8;margin-bottom:4px">${course.emoji||'📚'} ${course.name||'Course'}</div>
+          <div class="hero-grade">${pred.predicted_grade}</div>
+          <div class="hero-letter">${pred.predicted_letter}</div>
+          <div style="display:flex;gap:16px;justify-content:center;font-size:13px;opacity:0.85;margin-top:12px">
+            <span style="padding:3px 10px;border-radius:12px;background:rgba(255,255,255,0.15)">${pred.trend}</span>
+            <span>Confidence: ${(pred.confidence*100).toFixed(0)}%</span>
+            ${pred.sessions_to_target!=null?`<span>${pred.sessions_to_target} sessions to target</span>`:''}
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">Concept Mastery</div>
+          ${concepts.map(c=>{
+            const pct = (c.effective_score*100).toFixed(0);
+            return `
+            <div class="concept-row">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500;margin-bottom:6px">
+                  <span>${c.concept_name}</span>
+                  <span style="color:${barColor(pct)};font-weight:600">${pct}%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColor(pct)}"></div></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:4px">
+                  <div class="confidence-dots">${confDots(c.confidence)}</div>
+                  <span>${c.attempt_count} attempts${c.days_since_practice!=null?' · '+c.days_since_practice+'d ago':''}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+          <div style="margin-top:12px">
+            <div class="bar-track" style="height:12px;border-radius:6px">
+              <div class="bar-fill" style="width:${masteryRes.overall_mastery}%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-top:6px">
+              <span>Overall Mastery</span><span>${masteryRes.overall_mastery.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+
+        ${sparkSvg ? `<div class="section-card"><div class="section-title">Grade History</div>${sparkSvg}</div>` : ''}
+
+        <div class="section-card">
+          <div class="section-title">⚡ Recommended Actions</div>
+          ${pred.recommended_actions.map(a=>`
+            <div class="rec-item"><div class="rec-icon">⚡</div><span>${a}</span></div>
+          `).join('')}
+        </div>
+
+        <button class="btn-study" onclick="location.hash='#/study/${courseId}'">Study This Course</button>
+      </div>`;
+  } catch(e) {
+    page().innerHTML = `<div class="page active" style="padding:80px 24px;text-align:center"><p>Failed to load course</p><p class="text-muted">${e.message}</p></div>`;
+  }
+}
+
+// ============================================================
+//  STUDY MODE
+// ============================================================
+async function showStudy(courseId) {
+  nav().style.display = 'none';
+  page().innerHTML = '<div class="page active" style="padding:24px 0"><div class="spinner" style="margin:80px auto"></div></div>';
+  try {
+    const [masteryRes, coursesRes, predBefore] = await Promise.all([
+      api(`/api/v1/courses/${courseId}/mastery`),
+      api('/api/v1/courses'),
+      api(`/api/v1/grades/${courseId}/predict?save=false`),
+    ]);
+    const course = coursesRes.courses.find(c=>c.id===courseId) || {};
+    const weakConcepts = masteryRes.concepts.filter(c=>c.effective_score<0.8);
+    if (!weakConcepts.length) weakConcepts.push(...masteryRes.concepts.slice(0,3));
+
+    let idx = 0, totalDelta = 0, startGrade = predBefore.prediction.predicted_grade, currentGrade = startGrade;
+
+    function renderConcept() {
+      if (idx >= weakConcepts.length) return renderComplete();
+      const c = weakConcepts[idx];
+      const pct = (c.effective_score*100).toFixed(0);
+      page().innerHTML = `
+        <div class="page active" style="padding:16px 0">
+          <div class="study-header">
+            <span style="font-weight:600">${course.emoji||'📚'} Study Session</span>
+            <button class="back-btn" onclick="location.hash='#/course/${courseId}'" style="position:static;font-size:20px" aria-label="Close">✕</button>
+          </div>
+          <div class="study-progress"><div class="study-progress-fill" style="width:${((idx)/(weakConcepts.length))*100}%"></div></div>
+          <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px">${idx+1} of ${weakConcepts.length} concepts</div>
+          <div class="study-card">
+            <div class="study-concept">${c.concept_name}</div>
+            <div class="study-mastery">Current mastery: ${pct}%</div>
+            <div class="study-prompt">Imagine you just answered a question about ${c.concept_name}...</div>
+            <div class="study-buttons">
+              <button class="btn-correct" onclick="studyAnswer('${c.concept_id}','correct_answer',1.0,'${c.concept_name.replace(/'/g,"\\'")}')">✓ I got it right</button>
+              <button class="btn-hint" onclick="studyAnswer('${c.concept_id}','needed_hint',0.5,'${c.concept_name.replace(/'/g,"\\'")}')">? I needed a hint</button>
+              <button class="btn-wrong" onclick="studyAnswer('${c.concept_id}','incorrect_answer',0.1,'${c.concept_name.replace(/'/g,"\\'")}')">✗ I got it wrong</button>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;font-size:14px;color:var(--text2)">Predicted: <strong style="color:var(--text)">${currentGrade.toFixed(1)}</strong></div>
+        </div>`;
+    }
+
+    window.studyAnswer = async function(conceptId, signalType, signalValue, name) {
+      document.querySelectorAll('.study-buttons button').forEach(b=>b.disabled=true);
+      try {
+        const result = await api('/api/v1/mastery/update', {
+          method:'POST',
+          body: JSON.stringify({user_id:USER_ID, concept_id:conceptId, signal_type:signalType, signal_value:signalValue})
+        });
+        const newPred = await api(`/api/v1/grades/${courseId}/predict?save=false`);
+        const delta = newPred.prediction.predicted_grade - currentGrade;
+        currentGrade = newPred.prediction.predicted_grade;
+        totalDelta += delta;
+        const scoreDiff = result.new_score - result.old_score;
+        const sign = scoreDiff >= 0 ? '+' : '';
+        const color = signalType==='correct_answer'?'var(--green)':signalType==='needed_hint'?'var(--yellow)':'var(--red)';
+        toast(`<span style="color:${color}">${name}</span>: ${sign}${(scoreDiff*100).toFixed(1)}%`);
+        idx++;
+        setTimeout(renderConcept, 1200);
+      } catch(e) { toast('Error updating', 'error'); }
+    };
+
+    function renderComplete() {
+      const xp = weakConcepts.length * 25;
+      page().innerHTML = `
+        <div class="page active session-complete">
+          <div style="font-size:48px;margin-bottom:16px">🎉</div>
+          <h2 style="font-size:24px;font-weight:700;margin-bottom:8px">Nice work!</h2>
+          <p class="text-muted" style="margin-bottom:32px">You studied ${weakConcepts.length} concepts</p>
+          <div class="xp-earned">+${xp} XP</div>
+          <p style="font-size:14px;color:var(--text2);margin-top:8px">Experience points earned</p>
+          <div style="display:flex;gap:16px;justify-content:center;margin-top:32px">
+            <div class="stat-box" style="flex:1">
+              <div class="stat-number">${weakConcepts.length}</div>
+              <div class="stat-label">Concepts</div>
+            </div>
+            <div class="stat-box" style="flex:1">
+              <div class="stat-number" style="color:${totalDelta>=0?'var(--green)':'var(--red)'}">${totalDelta>=0?'+':''}${totalDelta.toFixed(1)}</div>
+              <div class="stat-label">Grade Change</div>
+            </div>
+          </div>
+          <button class="btn-primary" style="margin-top:32px" onclick="location.hash='#/course/${courseId}'">Back to Course</button>
+        </div>`;
+    }
+
+    renderConcept();
+  } catch(e) {
+    page().innerHTML = `<div class="page active" style="padding:80px 24px;text-align:center"><p>Failed to start session</p><p class="text-muted">${e.message}</p></div>`;
+  }
+}
+
+// ============================================================
+//  PROFILE
+// ============================================================
+async function showProfile() {
+  nav().style.display = 'flex';
+  setNav('profile');
+  page().innerHTML = '<div class="page active" style="padding:24px 0"><div class="spinner" style="margin:80px auto"></div></div>';
+  try {
+    const [profileRes, coursesRes] = await Promise.all([api('/api/v1/user/profile'), api('/api/v1/courses')]);
+    const user = profileRes.user;
+    const courses = coursesRes.courses;
+    const streak = getStreak();
+    const careerId = localStorage.getItem('plaito_career') || 'other';
+    const career = CAREERS.find(c=>c.id===careerId) || CAREERS[CAREERS.length-1];
+
+    const preds = await Promise.all(courses.map(c => api(`/api/v1/grades/${c.id}/predict?save=false`)));
+    const masteries = await Promise.all(courses.map(c => api(`/api/v1/courses/${c.id}/mastery`)));
+    const totalConcepts = masteries.reduce((a,m)=>a+m.concepts.length,0);
+    const mastered = masteries.reduce((a,m)=>a+m.concepts.filter(c=>c.effective_score>=0.8).length,0);
+    const totalAttempts = masteries.reduce((a,m)=>a+m.concepts.reduce((b,c)=>b+c.attempt_count,0),0);
+    const xp = totalAttempts * 15;
+
+    page().innerHTML = `
+      <div class="page active" style="padding:24px 0">
+        <div style="text-align:center;margin-bottom:24px">
+          <div class="avatar" style="margin:0 auto 12px">${(user.display_name||'?')[0]}</div>
+          <div style="font-size:20px;font-weight:700">${user.display_name||'Student'}</div>
+          <div class="text-muted" style="font-size:14px">${user.school_name||''} · ${user.grade_level||''}</div>
+        </div>
+
+        <div class="goal-card" style="margin-bottom:20px">
+          <div style="font-size:24px;margin-bottom:8px">${career.emoji}</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:4px">Future ${career.label}</div>
+          <div style="font-size:14px;color:var(--text2)">${career.msg}</div>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom:20px">
+          <div class="stat-box"><div class="stat-number">${xp.toLocaleString()}</div><div class="stat-label">Total XP</div></div>
+          <div class="stat-box"><div class="stat-number">🔥 ${streak.count}</div><div class="stat-label">Day Streak</div></div>
+          <div class="stat-box"><div class="stat-number">${courses.length}</div><div class="stat-label">Courses</div></div>
+          <div class="stat-box"><div class="stat-number">${mastered}/${totalConcepts}</div><div class="stat-label">Mastered</div></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">Course Grades</div>
+          ${courses.map((c,i)=>{
+            const p = preds[i].prediction;
+            return `<div class="grade-list-item">
+              <span>${c.emoji||'📚'} ${c.name}</span>
+              <span style="font-weight:600;color:${barColor(p.predicted_grade)}">${p.predicted_grade} (${p.predicted_letter})</span>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <button class="btn-primary" style="margin-top:16px;background:var(--surface2)" onclick="location.hash='#/goals'">Change Life Goal</button>
+      </div>`;
+  } catch(e) {
+    page().innerHTML = `<div class="page active" style="padding:80px 24px;text-align:center"><p>Failed to load profile</p><p class="text-muted">${e.message}</p></div>`;
+  }
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+router();
 </script>
 </body>
 </html>
