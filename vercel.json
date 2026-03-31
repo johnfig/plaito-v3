@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "services/ai-engine/api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "services/ai-engine/**"
+      }
     }
   ],
   "routes": [

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plaito - Grade Prediction Demo</title>
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface2: #23233a;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --green: #00b894;
+    --yellow: #fdcb6e;
+    --red: #e17055;
+    --orange: #f39c12;
+    --text: #f0f0f5;
+    --text2: #9a9ab0;
+    --border: #2d2d44;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .header p { color: var(--text2); font-size: 14px; }
+
+  /* Grade Card */
+  .grade-card {
+    background: linear-gradient(135deg, var(--accent), #4834d4);
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .grade-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  }
+  .grade-card .course-name {
+    font-size: 14px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .grade-card .grade-number {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: all 0.5s ease;
+  }
+  .grade-card .grade-letter {
+    font-size: 24px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 16px;
+  }
+  .grade-card .grade-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  .grade-card .grade-meta span { display: flex; align-items: center; gap: 4px; }
+  .grade-delta {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+  .grade-delta.positive { background: rgba(0, 184, 148, 0.25); color: var(--green); }
+  .grade-delta.negative { background: rgba(225, 112, 85, 0.25); color: var(--red); }
+  .grade-delta.neutral { background: rgba(255,255,255,0.15); color: var(--text); }
+
+  /* Trend badge */
+  .trend-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .trend-badge.improving { background: rgba(0,184,148,0.2); color: var(--green); }
+  .trend-badge.declining { background: rgba(225,112,85,0.2); color: var(--red); }
+  .trend-badge.stable { background: rgba(253,203,110,0.2); color: var(--yellow); }
+  .trend-badge.new { background: rgba(162,155,254,0.2); color: var(--accent2); }
+
+  /* Section */
+  .section {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Mastery bars */
+  .concept-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  .concept-row:hover { transform: translateX(2px); }
+  .concept-row:last-child { margin-bottom: 0; }
+  .concept-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .concept-name {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .concept-pct {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease, background 0.4s ease;
+  }
+  .concept-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .btn-signal {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .btn-signal:active { transform: scale(0.9); }
+  .btn-correct {
+    background: rgba(0, 184, 148, 0.15);
+    color: var(--green);
+  }
+  .btn-correct:hover { background: rgba(0, 184, 148, 0.3); }
+  .btn-wrong {
+    background: rgba(225, 112, 85, 0.15);
+    color: var(--red);
+  }
+  .btn-wrong:hover { background: rgba(225, 112, 85, 0.3); }
+  .btn-hint {
+    background: rgba(253, 203, 110, 0.15);
+    color: var(--yellow);
+  }
+  .btn-hint:hover { background: rgba(253, 203, 110, 0.3); }
+
+  /* Recommendations */
+  .rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(108, 92, 231, 0.2);
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 1px;
+  }
+
+  /* Sessions counter */
+  .sessions-target {
+    text-align: center;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: 12px;
+    margin-top: 12px;
+  }
+  .sessions-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .sessions-label {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Confidence meter */
+  .confidence-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .confidence-dots {
+    display: flex;
+    gap: 3px;
+  }
+  .confidence-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .confidence-dot.filled { background: var(--accent2); }
+
+  /* Overall mastery */
+  .overall-bar {
+    margin-top: 12px;
+  }
+  .overall-track {
+    height: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .overall-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.6s ease;
+  }
+  .overall-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-top: 6px;
+    color: var(--text2);
+  }
+
+  @media (max-width: 480px) {
+    .grade-card .grade-number { font-size: 56px; }
+    .concept-actions { gap: 4px; }
+    .btn-signal { width: 32px; height: 32px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Plaito</h1>
+    <p>AI Grade Prediction Engine</p>
+  </div>
+
+  <div id="app">
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading prediction...
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin;
+const USER_ID = '11111111-1111-1111-1111-111111111111';
+const COURSE_ID = '22222222-2222-2222-2222-222222222222';
+const HEADERS = { 'x-user-id': USER_ID, 'Content-Type': 'application/json' };
+
+let previousGrade = null;
+
+function barColor(score) {
+  if (score >= 80) return 'var(--green)';
+  if (score >= 60) return 'var(--accent2)';
+  if (score >= 40) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function confidenceDots(confidence) {
+  const filled = Math.round(confidence * 5);
+  return Array.from({length: 5}, (_, i) =>
+    `<div class="confidence-dot ${i < filled ? 'filled' : ''}"></div>`
+  ).join('');
+}
+
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+async function fetchPrediction() {
+  const res = await fetch(`${API}/api/v1/grades/${COURSE_ID}/predict`, { headers: HEADERS });
+  return res.json();
+}
+
+async function fetchMastery() {
+  const res = await fetch(`${API}/api/v1/courses/${COURSE_ID}/mastery`, { headers: HEADERS });
+  return res.json();
+}
+
+async function sendSignal(conceptId, signalType, signalValue) {
+  const res = await fetch(`${API}/api/v1/mastery/update`, {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({
+      user_id: USER_ID,
+      concept_id: conceptId,
+      signal_type: signalType,
+      signal_value: signalValue
+    })
+  });
+  return res.json();
+}
+
+async function render() {
+  const [predData, masteryData] = await Promise.all([fetchPrediction(), fetchMastery()]);
+  const pred = predData.prediction;
+  const concepts = masteryData.concepts;
+
+  // Grade delta
+  let deltaHtml = '';
+  if (previousGrade !== null) {
+    const diff = pred.predicted_grade - previousGrade;
+    if (Math.abs(diff) >= 0.1) {
+      const cls = diff > 0 ? 'positive' : 'negative';
+      const sign = diff > 0 ? '+' : '';
+      deltaHtml = `<div class="grade-delta ${cls}">${sign}${diff.toFixed(1)} pts</div>`;
+    } else {
+      deltaHtml = `<div class="grade-delta neutral">No change</div>`;
+    }
+  }
+  previousGrade = pred.predicted_grade;
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <!-- Grade Card -->
+    <div class="grade-card">
+      <div class="course-name">Calculus II - MATH 201</div>
+      ${deltaHtml}
+      <div class="grade-number">${pred.predicted_grade}</div>
+      <div class="grade-letter">${pred.predicted_letter}</div>
+      <div class="grade-meta">
+        <span class="trend-badge ${pred.trend}">${pred.trend}</span>
+        <span>Confidence: ${(pred.confidence * 100).toFixed(0)}%</span>
+        ${pred.sessions_to_target !== null ? `<span>${pred.sessions_to_target} sessions to A</span>` : ''}
+      </div>
+    </div>
+
+    <!-- Mastery Map -->
+    <div class="section">
+      <div class="section-title">
+        <span>Concept Mastery</span>
+      </div>
+      ${concepts.map(c => `
+        <div class="concept-row">
+          <div class="concept-info">
+            <div class="concept-name">
+              <span>${c.concept_name}</span>
+              <span class="concept-pct" style="color: ${barColor(c.effective_score * 100)}">${(c.effective_score * 100).toFixed(0)}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: ${c.effective_score * 100}%; background: ${barColor(c.effective_score * 100)}"></div>
+            </div>
+            <div class="confidence-row">
+              <div class="confidence-dots">${confidenceDots(c.confidence)}</div>
+              <span>${c.attempt_count} attempts${c.days_since_practice !== null ? ` · ${c.days_since_practice}d ago` : ' · new'}</span>
+            </div>
+          </div>
+          <div class="concept-actions">
+            <button class="btn-signal btn-correct" onclick="handleSignal('${c.concept_id}', 'correct_answer', 1.0, '${c.concept_name}')" title="Correct answer">&#10003;</button>
+            <button class="btn-signal btn-hint" onclick="handleSignal('${c.concept_id}', 'needed_hint', 0.5, '${c.concept_name}')" title="Needed hint">?</button>
+            <button class="btn-signal btn-wrong" onclick="handleSignal('${c.concept_id}', 'incorrect_answer', 0.1, '${c.concept_name}')" title="Wrong answer">&#10007;</button>
+          </div>
+        </div>
+      `).join('')}
+
+      <div class="overall-bar">
+        <div class="overall-track">
+          <div class="overall-fill" style="width: ${masteryData.overall_mastery}%"></div>
+        </div>
+        <div class="overall-label">
+          <span>Overall Mastery</span>
+          <span>${masteryData.overall_mastery.toFixed(1)}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="section">
+      <div class="section-title">
+        <span>Recommended Actions</span>
+      </div>
+      ${pred.recommended_actions.map(a => `
+        <div class="rec-item">
+          <div class="rec-icon">&#9889;</div>
+          <span>${a}</span>
+        </div>
+      `).join('')}
+
+      ${pred.sessions_to_target !== null && pred.sessions_to_target > 0 ? `
+        <div class="sessions-target">
+          <div class="sessions-number">${pred.sessions_to_target}</div>
+          <div class="sessions-label">study sessions to reach your A target</div>
+        </div>
+      ` : `
+        <div class="sessions-target">
+          <div class="sessions-number" style="color: var(--green)">&#10003;</div>
+          <div class="sessions-label">You've reached your target!</div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function handleSignal(conceptId, signalType, signalValue, conceptName) {
+  // Disable all buttons during update
+  document.querySelectorAll('.btn-signal').forEach(b => b.disabled = true);
+
+  const labels = {
+    'correct_answer': ['&#10003; Correct!', 'var(--green)'],
+    'needed_hint': ['? Hint used', 'var(--yellow)'],
+    'incorrect_answer': ['&#10007; Incorrect', 'var(--red)'],
+  };
+  const [label, color] = labels[signalType];
+
+  try {
+    const result = await sendSignal(conceptId, signalType, signalValue);
+    const scoreDiff = result.new_score - result.old_score;
+    const sign = scoreDiff >= 0 ? '+' : '';
+    showToast(`<span style="color:${color}">${label}</span> &nbsp;${conceptName}: ${sign}${(scoreDiff * 100).toFixed(1)}%`);
+
+    await render();
+  } catch (e) {
+    showToast('Error updating mastery');
+  }
+}
+
+// Initial load
+render().catch(() => {
+  document.getElementById('app').innerHTML = '<div class="loading">Failed to load. Make sure the API is running.</div>';
+});
+</script>
+</body>
+</html>
