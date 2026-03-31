@@ -11,7 +11,15 @@ from app.routes import health, llm, mastery, predict
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup — seed demo data when using in-memory DB
+    if not settings.supabase_service_key:
+        from app.models.database import get_supabase
+        from app.models.memory_db import InMemoryDB
+        db = get_supabase()
+        if isinstance(db, InMemoryDB):
+            from app.seed import seed_database
+            seed_database(db)
+            print("Seeded in-memory database with demo data")
     yield
     # Shutdown
 
