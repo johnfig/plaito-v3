@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.config import settings
-from app.routes import health, llm, mastery, predict
+from app.routes import courses, health, llm, mastery, predict
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -49,6 +49,7 @@ app.include_router(health.router)
 app.include_router(predict.router)
 app.include_router(mastery.router)
 app.include_router(llm.router)
+app.include_router(courses.router)
 
 
 @app.get("/", include_in_schema=False)
