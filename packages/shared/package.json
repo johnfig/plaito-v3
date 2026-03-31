@@ -1,0 +1,9 @@
+{
+  "name": "@plaito/shared",
+  "version": "0.1.0",
+  "description": "Shared types for Plaito mobile and backend",
+  "main": "types.ts",
+  "types": "types.ts",
+  "license": "UNLICENSED",
+  "private": true
+}
